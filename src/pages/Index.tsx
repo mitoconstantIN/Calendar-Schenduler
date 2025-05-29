@@ -11,7 +11,15 @@ import { ro } from 'date-fns/locale';
 import { AddAppointmentDialog } from '@/components/AddAppointmentDialog';
 import { AppointmentCard } from '@/components/AppointmentCard';
 import { ViewToggle } from '@/components/ViewToggle';
-import { mockAppointments, type Appointment } from '@/data/mockData';
+import { DayDetailsDialog } from '@/components/DayDetailsDialog';
+import { 
+  useAppointments, 
+  useCreateAppointment, 
+  useUpdateAppointment, 
+  useDeleteAppointment,
+  type Appointment 
+} from '@/hooks/useAppointments';
+import { toast } from '@/hooks/use-toast';
 
 export type ViewMode = 'day' | 'week' | 'month';
 
@@ -19,8 +27,13 @@ const Index = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('month');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [appointments, setAppointments] = useState<Appointment[]>(mockAppointments);
+  const [isDayDetailsOpen, setIsDayDetailsOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+
+  const { data: appointments = [], isLoading } = useAppointments();
+  const createAppointment = useCreateAppointment();
+  const updateAppointment = useUpdateAppointment();
+  const deleteAppointment = useDeleteAppointment();
 
   const getAppointmentsForDate = (date: Date) => {
     return appointments.filter(apt => 
@@ -28,32 +41,64 @@ const Index = () => {
     );
   };
 
-  const getAppointmentsForView = () => {
-    if (viewMode === 'day') {
-      return getAppointmentsForDate(selectedDate);
+  const hasAppointmentsOnDate = (date: Date) => {
+    return getAppointmentsForDate(date).length > 0;
+  };
+
+  const handleAddAppointment = async (newAppointment: Omit<Appointment, 'id' | 'created_at' | 'updated_at'>) => {
+    try {
+      await createAppointment.mutateAsync(newAppointment);
+    } catch (error) {
+      toast({
+        title: "Eroare",
+        description: "Nu am putut adăuga programarea. Te rog încearcă din nou.",
+        variant: "destructive",
+      });
     }
-    // Pentru week și month, returnăm toate programările din perioada vizibilă
-    return appointments;
   };
 
-  const handleAddAppointment = (newAppointment: Omit<Appointment, 'id'>) => {
-    const appointment: Appointment = {
-      ...newAppointment,
-      id: Date.now().toString(),
-    };
-    setAppointments(prev => [...prev, appointment]);
+  const handleEditAppointment = async (updatedAppointment: Appointment) => {
+    try {
+      await updateAppointment.mutateAsync(updatedAppointment);
+      setSelectedAppointment(null);
+    } catch (error) {
+      toast({
+        title: "Eroare",
+        description: "Nu am putut modifica programarea. Te rog încearcă din nou.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleEditAppointment = (updatedAppointment: Appointment) => {
-    setAppointments(prev => 
-      prev.map(apt => apt.id === updatedAppointment.id ? updatedAppointment : apt)
+  const handleDeleteAppointment = async (id: string) => {
+    try {
+      await deleteAppointment.mutateAsync(id);
+    } catch (error) {
+      toast({
+        title: "Eroare",
+        description: "Nu am putut șterge programarea. Te rog încearcă din nou.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDayClick = (date: Date) => {
+    setSelectedDate(date);
+    if (hasAppointmentsOnDate(date)) {
+      setIsDayDetailsOpen(true);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Se încarcă programările...</p>
+        </div>
+      </div>
     );
-    setSelectedAppointment(null);
-  };
-
-  const handleDeleteAppointment = (id: string) => {
-    setAppointments(prev => prev.filter(apt => apt.id !== id));
-  };
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-2 md:p-4">
@@ -94,8 +139,18 @@ const Index = () => {
                 <Calendar
                   mode="single"
                   selected={selectedDate}
-                  onSelect={(date) => date && setSelectedDate(date)}
+                  onSelect={(date) => date && handleDayClick(date)}
                   className="rounded-md border shadow-sm w-full"
+                  modifiers={{
+                    hasAppointments: (date) => hasAppointmentsOnDate(date)
+                  }}
+                  modifiersStyles={{
+                    hasAppointments: { 
+                      backgroundColor: '#3b82f6', 
+                      color: 'white',
+                      fontWeight: 'bold'
+                    }
+                  }}
                   classNames={{
                     months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
                     month: "space-y-4 w-full",
@@ -114,7 +169,7 @@ const Index = () => {
                       "[&:has([aria-selected])]:bg-accent"
                     ),
                     day: cn(
-                      "h-8 w-full p-0 font-normal aria-selected:opacity-100 hover:bg-accent hover:text-accent-foreground rounded-md"
+                      "h-8 w-full p-0 font-normal aria-selected:opacity-100 hover:bg-accent hover:text-accent-foreground rounded-md cursor-pointer"
                     ),
                     day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
                     day_today: "bg-accent text-accent-foreground font-semibold",
@@ -209,6 +264,13 @@ const Index = () => {
         appointment={selectedAppointment}
         onEdit={handleEditAppointment}
         existingAppointments={appointments}
+      />
+
+      <DayDetailsDialog
+        open={isDayDetailsOpen}
+        onOpenChange={setIsDayDetailsOpen}
+        date={selectedDate}
+        appointments={getAppointmentsForDate(selectedDate)}
       />
     </div>
   );

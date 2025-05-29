@@ -6,7 +6,7 @@ import { CalendarIcon, X } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ro } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import type { Appointment } from '@/data/mockData';
+import type { Appointment } from '@/hooks/useAppointments';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,13 +48,13 @@ export const AppointmentCard = ({
               "font-semibold text-gray-900 truncate",
               compact ? "text-sm" : "text-base"
             )}>
-              {appointment.trainerName}
+              {appointment.trainer_name}
             </h4>
             <p className={cn(
               "text-gray-600 truncate",
               compact ? "text-xs" : "text-sm"
             )}>
-              {appointment.schoolName}
+              {appointment.school_name}
             </p>
           </div>
           <div className="flex items-center gap-1">
@@ -80,8 +80,8 @@ export const AppointmentCard = ({
                 <AlertDialogHeader>
                   <AlertDialogTitle>Confirmare ștergere</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Ești sigur că vrei să ștergi programarea pentru <strong>{appointment.trainerName}</strong> 
-                    la <strong>{appointment.schoolName}</strong>?
+                    Ești sigur că vrei să ștergi programarea pentru <strong>{appointment.trainer_name}</strong> 
+                    la <strong>{appointment.school_name}</strong>?
                     <br />
                     Această acțiune nu poate fi anulată.
                   </AlertDialogDescription>
@@ -102,7 +102,7 @@ export const AppointmentCard = ({
         
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline" className="text-xs">
-            {formatTime(appointment.startTime)} - {formatTime(appointment.endTime)}
+            {formatTime(appointment.start_time)} - {formatTime(appointment.end_time)}
           </Badge>
           {!compact && (
             <Badge variant="secondary" className="text-xs">

@@ -22,13 +22,13 @@ import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { ro } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import type { Appointment } from '@/data/mockData';
 import { toast } from '@/hooks/use-toast';
+import type { Appointment } from '@/hooks/useAppointments';
 
 interface AddAppointmentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAdd: (appointment: Omit<Appointment, 'id'>) => void;
+  onAdd: (appointment: Omit<Appointment, 'id' | 'created_at' | 'updated_at'>) => void;
   appointment?: Appointment | null;
   onEdit?: (appointment: Appointment) => void;
   existingAppointments: Appointment[];
@@ -43,11 +43,11 @@ export const AddAppointmentDialog = ({
   existingAppointments
 }: AddAppointmentDialogProps) => {
   const [formData, setFormData] = useState({
-    trainerName: '',
-    schoolName: '',
+    trainer_name: '',
+    school_name: '',
     date: new Date(),
-    startTime: '',
-    endTime: '',
+    start_time: '',
+    end_time: '',
     observations: ''
   });
 
@@ -56,20 +56,20 @@ export const AddAppointmentDialog = ({
   useEffect(() => {
     if (appointment) {
       setFormData({
-        trainerName: appointment.trainerName,
-        schoolName: appointment.schoolName,
+        trainer_name: appointment.trainer_name,
+        school_name: appointment.school_name,
         date: new Date(appointment.date),
-        startTime: appointment.startTime,
-        endTime: appointment.endTime,
+        start_time: appointment.start_time,
+        end_time: appointment.end_time,
         observations: appointment.observations || ''
       });
     } else {
       setFormData({
-        trainerName: '',
-        schoolName: '',
+        trainer_name: '',
+        school_name: '',
         date: new Date(),
-        startTime: '',
-        endTime: '',
+        start_time: '',
+        end_time: '',
         observations: ''
       });
     }
@@ -77,14 +77,14 @@ export const AddAppointmentDialog = ({
 
   const validateTimeOverlap = (trainerName: string, date: string, startTime: string, endTime: string, excludeId?: string) => {
     const conflictingAppointments = existingAppointments.filter(apt => 
-      apt.trainerName === trainerName && 
+      apt.trainer_name === trainerName && 
       apt.date === date &&
       apt.id !== excludeId
     );
 
     for (const apt of conflictingAppointments) {
-      const aptStart = apt.startTime;
-      const aptEnd = apt.endTime;
+      const aptStart = apt.start_time;
+      const aptEnd = apt.end_time;
       
       // Check if times overlap
       if (
@@ -106,7 +106,7 @@ export const AddAppointmentDialog = ({
     e.preventDefault();
     
     // Validate required fields
-    if (!formData.trainerName || !formData.schoolName || !formData.startTime || !formData.endTime) {
+    if (!formData.trainer_name || !formData.school_name || !formData.start_time || !formData.end_time) {
       toast({
         title: "Eroare validare",
         description: "Te rog completează toate câmpurile obligatorii.",
@@ -116,7 +116,7 @@ export const AddAppointmentDialog = ({
     }
 
     // Validate time order
-    if (formData.startTime >= formData.endTime) {
+    if (formData.start_time >= formData.end_time) {
       toast({
         title: "Eroare validare",
         description: "Ora de începere trebuie să fie înainte de ora de sfârșit.",
@@ -129,35 +129,38 @@ export const AddAppointmentDialog = ({
     
     // Validate time overlap
     const validation = validateTimeOverlap(
-      formData.trainerName, 
+      formData.trainer_name, 
       dateString, 
-      formData.startTime, 
-      formData.endTime,
+      formData.start_time, 
+      formData.end_time,
       appointment?.id
     );
     
     if (validation.hasConflict) {
       toast({
         title: "Conflict de programare",
-        description: `${formData.trainerName} are deja o programare între ${validation.conflictingAppointment?.startTime} - ${validation.conflictingAppointment?.endTime} la ${validation.conflictingAppointment?.schoolName}.`,
+        description: `${formData.trainer_name} are deja o programare între ${validation.conflictingAppointment?.start_time} - ${validation.conflictingAppointment?.end_time} la ${validation.conflictingAppointment?.school_name}.`,
         variant: "destructive",
       });
       return;
     }
 
     const appointmentData = {
-      trainerName: formData.trainerName,
-      schoolName: formData.schoolName,
+      trainer_id: '00000000-0000-0000-0000-000000000000', // Placeholder for now
+      trainer_name: formData.trainer_name,
+      school_name: formData.school_name,
       date: dateString,
-      startTime: formData.startTime,
-      endTime: formData.endTime,
+      start_time: formData.start_time,
+      end_time: formData.end_time,
       observations: formData.observations
     };
 
     if (isEditing && appointment && onEdit) {
       onEdit({
         ...appointmentData,
-        id: appointment.id
+        id: appointment.id,
+        created_at: appointment.created_at,
+        updated_at: new Date().toISOString()
       });
       toast({
         title: "Programare modificată",
@@ -192,22 +195,22 @@ export const AddAppointmentDialog = ({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 gap-4">
             <div>
-              <Label htmlFor="trainerName">Nume Trainer *</Label>
+              <Label htmlFor="trainer_name">Nume Trainer *</Label>
               <Input
-                id="trainerName"
-                value={formData.trainerName}
-                onChange={(e) => setFormData(prev => ({...prev, trainerName: e.target.value}))}
+                id="trainer_name"
+                value={formData.trainer_name}
+                onChange={(e) => setFormData(prev => ({...prev, trainer_name: e.target.value}))}
                 placeholder="Ex: Ana Popescu"
                 required
               />
             </div>
             
             <div>
-              <Label htmlFor="schoolName">Nume Școală *</Label>
+              <Label htmlFor="school_name">Nume Școală *</Label>
               <Input
-                id="schoolName"
-                value={formData.schoolName}
-                onChange={(e) => setFormData(prev => ({...prev, schoolName: e.target.value}))}
+                id="school_name"
+                value={formData.school_name}
+                onChange={(e) => setFormData(prev => ({...prev, school_name: e.target.value}))}
                 placeholder="Ex: Școala Gimnazială Nr. 1"
                 required
               />
@@ -242,22 +245,22 @@ export const AddAppointmentDialog = ({
             
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <Label htmlFor="startTime">Ora Început *</Label>
+                <Label htmlFor="start_time">Ora Început *</Label>
                 <Input
-                  id="startTime"
+                  id="start_time"
                   type="time"
-                  value={formData.startTime}
-                  onChange={(e) => setFormData(prev => ({...prev, startTime: e.target.value}))}
+                  value={formData.start_time}
+                  onChange={(e) => setFormData(prev => ({...prev, start_time: e.target.value}))}
                   required
                 />
               </div>
               <div>
-                <Label htmlFor="endTime">Ora Sfârșit *</Label>
+                <Label htmlFor="end_time">Ora Sfârșit *</Label>
                 <Input
-                  id="endTime"
+                  id="end_time"
                   type="time"
-                  value={formData.endTime}
-                  onChange={(e) => setFormData(prev => ({...prev, endTime: e.target.value}))}
+                  value={formData.end_time}
+                  onChange={(e) => setFormData(prev => ({...prev, end_time: e.target.value}))}
                   required
                 />
               </div>
