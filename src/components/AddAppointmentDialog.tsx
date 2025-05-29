@@ -24,7 +24,6 @@ import { ro } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 import { TrainerSelect } from '@/components/TrainerSelect';
-import { PREDEFINED_TRAINERS } from '@/data/predefinedUsers';
 import type { Appointment } from '@/hooks/useAppointments';
 
 interface AddAppointmentDialogProps {
@@ -175,9 +174,8 @@ export const AddAppointmentDialog = ({
       return;
     }
 
-    // Obține ID-ul trainerului din lista predefinită
-    const selectedTrainer = PREDEFINED_TRAINERS.find(t => t.full_name === formData.trainer_name);
-    const trainerId = selectedTrainer?.id || '00000000-0000-0000-0000-000000000000';
+    // Generăm un UUID valid pentru trainer_id
+    const trainerId = crypto.randomUUID();
 
     const appointmentData = {
       trainer_id: trainerId,
@@ -196,16 +194,8 @@ export const AddAppointmentDialog = ({
         created_at: appointment.created_at,
         updated_at: new Date().toISOString()
       });
-      toast({
-        title: "Programare modificată",
-        description: "Programarea a fost modificată cu succes.",
-      });
     } else {
       onAdd(appointmentData);
-      toast({
-        title: "Programare adăugată",
-        description: "Programarea a fost adăugată cu succes.",
-      });
     }
 
     onOpenChange(false);
