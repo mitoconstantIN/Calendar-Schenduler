@@ -23,6 +23,8 @@ import { format } from 'date-fns';
 import { ro } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
+import { TrainerSelect } from '@/components/TrainerSelect';
+import { PREDEFINED_TRAINERS } from '@/data/predefinedUsers';
 import type { Appointment } from '@/hooks/useAppointments';
 
 interface AddAppointmentDialogProps {
@@ -86,7 +88,7 @@ export const AddAppointmentDialog = ({
       const aptStart = apt.start_time;
       const aptEnd = apt.end_time;
       
-      // Check if times overlap
+      // Check if times overlap - improved logic
       if (
         (startTime >= aptStart && startTime < aptEnd) ||
         (endTime > aptStart && endTime <= aptEnd) ||
@@ -100,6 +102,21 @@ export const AddAppointmentDialog = ({
     }
     
     return { hasConflict: false };
+  };
+
+  const validateBusinessHours = (startTime: string, endTime: string) => {
+    const start = parseInt(startTime.replace(':', ''));
+    const end = parseInt(endTime.replace(':', ''));
+    
+    // Business hours: 8:00 - 18:00
+    if (start < 800 || end > 1800) {
+      return {
+        isValid: false,
+        message: "Programările trebuie să fie între 08:00 și 18:00"
+      };
+    }
+    
+    return { isValid: true };
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -125,6 +142,17 @@ export const AddAppointmentDialog = ({
       return;
     }
 
+    // Validate business hours
+    const businessHoursValidation = validateBusinessHours(formData.start_time, formData.end_time);
+    if (!businessHoursValidation.isValid) {
+      toast({
+        title: "Eroare validare",
+        description: businessHoursValidation.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
     const dateString = format(formData.date, 'yyyy-MM-dd');
     
     // Validate time overlap
@@ -145,8 +173,12 @@ export const AddAppointmentDialog = ({
       return;
     }
 
+    // Get trainer ID from predefined trainers
+    const selectedTrainer = PREDEFINED_TRAINERS.find(t => t.full_name === formData.trainer_name);
+    const trainerId = selectedTrainer?.id || '00000000-0000-0000-0000-000000000000';
+
     const appointmentData = {
-      trainer_id: '00000000-0000-0000-0000-000000000000', // Placeholder for now
+      trainer_id: trainerId,
       trainer_name: formData.trainer_name,
       school_name: formData.school_name,
       date: dateString,
@@ -196,12 +228,10 @@ export const AddAppointmentDialog = ({
           <div className="grid grid-cols-1 gap-4">
             <div>
               <Label htmlFor="trainer_name">Nume Trainer *</Label>
-              <Input
-                id="trainer_name"
+              <TrainerSelect
                 value={formData.trainer_name}
-                onChange={(e) => setFormData(prev => ({...prev, trainer_name: e.target.value}))}
-                placeholder="Ex: Ana Popescu"
-                required
+                onValueChange={(value) => setFormData(prev => ({...prev, trainer_name: value}))}
+                placeholder="Selectează trainer"
               />
             </div>
             
@@ -251,6 +281,8 @@ export const AddAppointmentDialog = ({
                   type="time"
                   value={formData.start_time}
                   onChange={(e) => setFormData(prev => ({...prev, start_time: e.target.value}))}
+                  min="08:00"
+                  max="18:00"
                   required
                 />
               </div>
@@ -261,6 +293,8 @@ export const AddAppointmentDialog = ({
                   type="time"
                   value={formData.end_time}
                   onChange={(e) => setFormData(prev => ({...prev, end_time: e.target.value}))}
+                  min="08:00"
+                  max="18:00"
                   required
                 />
               </div>
