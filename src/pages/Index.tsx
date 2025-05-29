@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar } from '@/components/ui/calendar';
@@ -141,9 +140,8 @@ const Index = () => {
 
   const handleDayClick = (date: Date) => {
     setSelectedDate(date);
-    if (hasAppointmentsOnDate(date)) {
-      setIsDayDetailsOpen(true);
-    }
+    // Întotdeauna deschidem dialogul pentru detalii, indiferent dacă ziua are programări sau nu
+    setIsDayDetailsOpen(true);
   };
 
   const handleLogout = () => {
@@ -207,7 +205,7 @@ const Index = () => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white rounded-lg p-4 shadow-sm">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-              Programări Traineri
+              Program PNRR TechMinds Academy
             </h1>
             <p className="text-gray-600 text-sm md:text-base">
               Gestionare programări pentru școli

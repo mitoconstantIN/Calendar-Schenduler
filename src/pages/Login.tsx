@@ -54,7 +54,7 @@ const Login = () => {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Calendar className="w-8 h-8 text-blue-600" />
-            <h1 className="text-3xl font-bold text-gray-900">Programări Traineri</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Program PNRR TechMinds Academy</h1>
           </div>
           <p className="text-gray-600">Sistem de gestionare programări pentru școli</p>
         </div>
