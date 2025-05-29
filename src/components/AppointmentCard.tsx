@@ -32,7 +32,8 @@ export const AppointmentCard = ({
   onDelete, 
   compact = false 
 }: AppointmentCardProps) => {
-  const formatTime = (time: string) => {
+  const formatTime = (time: string | null | undefined) => {
+    if (!time) return '--:--';
     return time.slice(0, 5); // Remove seconds if present
   };
 
@@ -48,13 +49,13 @@ export const AppointmentCard = ({
               "font-semibold text-gray-900 truncate",
               compact ? "text-sm" : "text-base"
             )}>
-              {appointment.trainer_name}
+              {appointment.trainer_name || 'Nume trainer necunoscut'}
             </h4>
             <p className={cn(
               "text-gray-600 truncate",
               compact ? "text-xs" : "text-sm"
             )}>
-              {appointment.school_name}
+              {appointment.school_name || 'Școală necunoscută'}
             </p>
           </div>
           <div className="flex items-center gap-1">
