@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar } from '@/components/ui/calendar';
@@ -14,13 +15,10 @@ import { ViewToggle } from '@/components/ViewToggle';
 import { DayDetailsDialog } from '@/components/DayDetailsDialog';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
-
-// Mock data pentru demonstrație (înlocuiește hook-urile Supabase)
+import { useAppointments, useCreateAppointment, useUpdateAppointment, useDeleteAppointment } from '@/hooks/useAppointments';
 import type { Appointment } from '@/hooks/useAppointments';
 
-export type ViewMode = 'day' | 'week' | 'month';
-
-const APPOINTMENTS_STORAGE_KEY = 'trainer_appointments';
+export type ViewMode = 'day' | 'month';
 
 const Index = () => {
   const { user, logout, isAuthenticated } = useAuth();
@@ -30,25 +28,12 @@ const Index = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isDayDetailsOpen, setIsDayDetailsOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
 
-  // Încărcăm programările din localStorage la inițializare
-  useEffect(() => {
-    const savedAppointments = localStorage.getItem(APPOINTMENTS_STORAGE_KEY);
-    if (savedAppointments) {
-      try {
-        const parsedAppointments = JSON.parse(savedAppointments);
-        setAppointments(parsedAppointments);
-      } catch (error) {
-        console.error('Eroare la încărcarea programărilor din localStorage:', error);
-      }
-    }
-  }, []);
-
-  // Salvăm programările în localStorage de fiecare dată când se modifică
-  useEffect(() => {
-    localStorage.setItem(APPOINTMENTS_STORAGE_KEY, JSON.stringify(appointments));
-  }, [appointments]);
+  // Hook-uri Supabase pentru gestionarea programărilor
+  const { data: appointments = [], isLoading, error } = useAppointments();
+  const createAppointmentMutation = useCreateAppointment();
+  const updateAppointmentMutation = useUpdateAppointment();
+  const deleteAppointmentMutation = useDeleteAppointment();
 
   // Verificăm autentificarea
   useEffect(() => {
@@ -74,21 +59,13 @@ const Index = () => {
 
   const handleAddAppointment = async (newAppointment: Omit<Appointment, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      // Simulăm adăugarea unei programări
-      const appointment: Appointment = {
-        ...newAppointment,
-        id: crypto.randomUUID(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      
-      setAppointments(prev => [...prev, appointment]);
-      
+      await createAppointmentMutation.mutateAsync(newAppointment);
       toast({
         title: "Programare adăugată",
         description: "Programarea a fost adăugată cu succes.",
       });
     } catch (error) {
+      console.error('Eroare la adăugarea programării:', error);
       toast({
         title: "Eroare",
         description: "Nu am putut adăuga programarea. Te rog încearcă din nou.",
@@ -99,18 +76,14 @@ const Index = () => {
 
   const handleEditAppointment = async (updatedAppointment: Appointment) => {
     try {
-      setAppointments(prev => 
-        prev.map(apt => 
-          apt.id === updatedAppointment.id ? updatedAppointment : apt
-        )
-      );
+      await updateAppointmentMutation.mutateAsync(updatedAppointment);
       setSelectedAppointment(null);
-      
       toast({
         title: "Programare modificată",
         description: "Programarea a fost modificată cu succes.",
       });
     } catch (error) {
+      console.error('Eroare la modificarea programării:', error);
       toast({
         title: "Eroare",
         description: "Nu am putut modifica programarea. Te rog încearcă din nou.",
@@ -121,13 +94,13 @@ const Index = () => {
 
   const handleDeleteAppointment = async (id: string) => {
     try {
-      setAppointments(prev => prev.filter(apt => apt.id !== id));
-      
+      await deleteAppointmentMutation.mutateAsync(id);
       toast({
         title: "Programare ștearsă",
         description: "Programarea a fost ștearsă cu succes.",
       });
     } catch (error) {
+      console.error('Eroare la ștergerea programării:', error);
       toast({
         title: "Eroare",
         description: "Nu am putut șterge programarea. Te rog încearcă din nou.",
@@ -147,6 +120,30 @@ const Index = () => {
     logout();
     navigate('/login');
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Se încarcă programările...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600">Eroare la încărcarea programărilor</p>
+          <Button onClick={() => window.location.reload()} className="mt-4">
+            Încearcă din nou
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-2 md:p-4">
@@ -243,7 +240,7 @@ const Index = () => {
                 />
               )}
               
-              {(viewMode === 'day' || viewMode === 'week') && (
+              {viewMode === 'day' && (
                 <div className="space-y-4">
                   <div className="text-center">
                     <h3 className="text-lg font-semibold">
