@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 import { TrainerSelect } from '@/components/TrainerSelect';
 import { validateAppointmentForm } from '@/utils/appointmentValidation';
+import { PREDEFINED_TRAINERS } from '@/data/predefinedUsers';
 import type { Appointment } from '@/hooks/useAppointments';
 
 interface AppointmentFormProps {
@@ -67,17 +68,12 @@ export const AppointmentForm = ({
     }
   }, [appointment]);
 
-  const generateTrainerUUID = (trainerName: string): string => {
-    // Creăm un UUID consistent bazat pe numele trainerului
-    // Folosim o metodă simplă de hash pentru a genera același UUID pentru același nume
-    const hash = trainerName.split('').reduce((a, b) => {
-      a = ((a << 5) - a) + b.charCodeAt(0);
-      return a & a;
-    }, 0);
-    
-    // Convertim hash-ul la un UUID format
-    const hexHash = Math.abs(hash).toString(16).padStart(8, '0');
-    return `${hexHash.slice(0, 8)}-${hexHash.slice(0, 4)}-4${hexHash.slice(1, 4)}-8${hexHash.slice(0, 3)}-${hexHash.slice(0, 12)}`;
+  const getTrainerIdByName = (trainerName: string): string => {
+    const trainer = PREDEFINED_TRAINERS.find(t => t.full_name === trainerName);
+    if (!trainer) {
+      throw new Error(`Trainer "${trainerName}" nu a fost găsit în baza de date`);
+    }
+    return trainer.id;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -98,29 +94,37 @@ export const AppointmentForm = ({
       return;
     }
 
-    // Generăm un UUID consistent pentru trainer_id bazat pe numele trainerului
-    const trainerId = generateTrainerUUID(formData.trainer_name);
-    const dateString = format(formData.date, 'yyyy-MM-dd');
+    try {
+      // Obținem ID-ul real al trainerului din baza de date
+      const trainerId = getTrainerIdByName(formData.trainer_name);
+      const dateString = format(formData.date, 'yyyy-MM-dd');
 
-    const appointmentData = {
-      trainer_id: trainerId,
-      trainer_name: formData.trainer_name,
-      school_name: formData.school_name,
-      date: dateString,
-      start_time: formData.start_time,
-      end_time: formData.end_time,
-      observations: formData.observations
-    };
+      const appointmentData = {
+        trainer_id: trainerId,
+        trainer_name: formData.trainer_name,
+        school_name: formData.school_name,
+        date: dateString,
+        start_time: formData.start_time,
+        end_time: formData.end_time,
+        observations: formData.observations
+      };
 
-    if (isEditing && appointment && onEdit) {
-      onEdit({
-        ...appointmentData,
-        id: appointment.id,
-        created_at: appointment.created_at,
-        updated_at: new Date().toISOString()
+      if (isEditing && appointment && onEdit) {
+        onEdit({
+          ...appointmentData,
+          id: appointment.id,
+          created_at: appointment.created_at,
+          updated_at: new Date().toISOString()
+        });
+      } else {
+        onSubmit(appointmentData);
+      }
+    } catch (error) {
+      toast({
+        title: "Eroare",
+        description: error instanceof Error ? error.message : "Eroare la salvarea programării",
+        variant: "destructive",
       });
-    } else {
-      onSubmit(appointmentData);
     }
   };
 
