@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar } from '@/components/ui/calendar';
@@ -21,6 +20,8 @@ import type { Appointment } from '@/hooks/useAppointments';
 
 export type ViewMode = 'day' | 'week' | 'month';
 
+const APPOINTMENTS_STORAGE_KEY = 'trainer_appointments';
+
 const Index = () => {
   const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -30,6 +31,24 @@ const Index = () => {
   const [isDayDetailsOpen, setIsDayDetailsOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+
+  // Încărcăm programările din localStorage la inițializare
+  useEffect(() => {
+    const savedAppointments = localStorage.getItem(APPOINTMENTS_STORAGE_KEY);
+    if (savedAppointments) {
+      try {
+        const parsedAppointments = JSON.parse(savedAppointments);
+        setAppointments(parsedAppointments);
+      } catch (error) {
+        console.error('Eroare la încărcarea programărilor din localStorage:', error);
+      }
+    }
+  }, []);
+
+  // Salvăm programările în localStorage de fiecare dată când se modifică
+  useEffect(() => {
+    localStorage.setItem(APPOINTMENTS_STORAGE_KEY, JSON.stringify(appointments));
+  }, [appointments]);
 
   // Verificăm autentificarea
   useEffect(() => {
