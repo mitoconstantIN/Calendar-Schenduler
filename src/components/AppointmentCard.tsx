@@ -7,6 +7,7 @@ import { format, parseISO } from 'date-fns';
 import { ro } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import type { Appointment } from '@/hooks/useAppointments';
+import { useAuth } from '@/hooks/useAuth';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,6 +33,9 @@ export const AppointmentCard = ({
   onDelete, 
   compact = false 
 }: AppointmentCardProps) => {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
+
   const formatTime = (time: string | null | undefined) => {
     if (!time) return '--:--';
     return time.slice(0, 5); // Remove seconds if present
@@ -58,47 +62,49 @@ export const AppointmentCard = ({
               {appointment.school_name || 'Școală necunoscută'}
             </p>
           </div>
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onEdit(appointment)}
-              className="h-8 w-8 p-0 hover:bg-blue-100"
-            >
-              <CalendarIcon className="w-4 h-4" />
-            </Button>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0 hover:bg-red-100 text-red-600"
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Confirmare ștergere</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Ești sigur că vrei să ștergi programarea pentru <strong>{appointment.trainer_name}</strong> 
-                    la <strong>{appointment.school_name}</strong>?
-                    <br />
-                    Această acțiune nu poate fi anulată.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Anulează</AlertDialogCancel>
-                  <AlertDialogAction 
-                    onClick={() => onDelete(appointment.id)}
-                    className="bg-red-600 hover:bg-red-700"
+          {isAdmin && (
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onEdit(appointment)}
+                className="h-8 w-8 p-0 hover:bg-blue-100"
+              >
+                <CalendarIcon className="w-4 h-4" />
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 hover:bg-red-100 text-red-600"
                   >
-                    Șterge programarea
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
+                    <X className="w-4 h-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Confirmare ștergere</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Ești sigur că vrei să ștergi programarea pentru <strong>{appointment.trainer_name}</strong> 
+                      la <strong>{appointment.school_name}</strong>?
+                      <br />
+                      Această acțiune nu poate fi anulată.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Anulează</AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={() => onDelete(appointment.id)}
+                      className="bg-red-600 hover:bg-red-700"
+                    >
+                      Șterge programarea
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          )}
         </div>
         
         <div className="flex flex-wrap items-center gap-2">

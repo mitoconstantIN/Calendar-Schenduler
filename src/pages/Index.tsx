@@ -47,6 +47,9 @@ const Index = () => {
     return null;
   }
 
+  // Verificăm dacă utilizatorul este administrator
+  const isAdmin = user.role === 'admin';
+
   const getAppointmentsForDate = (date: Date) => {
     return appointments.filter(apt => 
       isSameDay(parseISO(apt.date), date)
@@ -58,6 +61,15 @@ const Index = () => {
   };
 
   const handleAddAppointment = async (newAppointment: Omit<Appointment, 'id' | 'created_at' | 'updated_at'>) => {
+    if (!isAdmin) {
+      toast({
+        title: "Acces restricționat",
+        description: "Doar administratorii pot adăuga programări.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       await createAppointmentMutation.mutateAsync(newAppointment);
       toast({
@@ -75,6 +87,15 @@ const Index = () => {
   };
 
   const handleEditAppointment = async (updatedAppointment: Appointment) => {
+    if (!isAdmin) {
+      toast({
+        title: "Acces restricționat",
+        description: "Doar administratorii pot modifica programări.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       await updateAppointmentMutation.mutateAsync(updatedAppointment);
       setSelectedAppointment(null);
@@ -93,6 +114,15 @@ const Index = () => {
   };
 
   const handleDeleteAppointment = async (id: string) => {
+    if (!isAdmin) {
+      toast({
+        title: "Acces restricționat",
+        description: "Doar administratorii pot șterge programări.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       await deleteAppointmentMutation.mutateAsync(id);
       toast({
@@ -119,6 +149,31 @@ const Index = () => {
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  const openAddDialog = () => {
+    if (!isAdmin) {
+      toast({
+        title: "Acces restricționat",
+        description: "Doar administratorii pot adăuga programări.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsAddDialogOpen(true);
+  };
+
+  const handleEditClick = (appointment: Appointment) => {
+    if (!isAdmin) {
+      toast({
+        title: "Acces restricționat",
+        description: "Doar administratorii pot modifica programări.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setSelectedAppointment(appointment);
+    setIsAddDialogOpen(true);
   };
 
   if (isLoading) {
@@ -167,13 +222,15 @@ const Index = () => {
               </Badge>
             </div>
             <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
-            <Button 
-              onClick={() => setIsAddDialogOpen(true)}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              <PlusIcon className="w-4 h-4 mr-2" />
-              Adaugă Programare
-            </Button>
+            {isAdmin && (
+              <Button 
+                onClick={openAddDialog}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <PlusIcon className="w-4 h-4 mr-2" />
+                Adaugă Programare
+              </Button>
+            )}
             <Button 
               onClick={handleLogout}
               variant="outline"
@@ -252,7 +309,7 @@ const Index = () => {
                       <AppointmentCard
                         key={appointment.id}
                         appointment={appointment}
-                        onEdit={setSelectedAppointment}
+                        onEdit={handleEditClick}
                         onDelete={handleDeleteAppointment}
                         compact={false}
                       />
@@ -282,7 +339,7 @@ const Index = () => {
                   <AppointmentCard
                     key={appointment.id}
                     appointment={appointment}
-                    onEdit={setSelectedAppointment}
+                    onEdit={handleEditClick}
                     onDelete={handleDeleteAppointment}
                     compact={true}
                   />
@@ -310,20 +367,29 @@ const Index = () => {
                     {getAppointmentsForDate(new Date()).length}
                   </Badge>
                 </div>
+                {!isAdmin && (
+                  <div className="mt-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <p className="text-xs text-yellow-800">
+                      <strong>Info:</strong> Doar administratorii pot adăuga, modifica sau șterge programări.
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
         </div>
       </div>
 
-      <AddAppointmentDialog
-        open={isAddDialogOpen}
-        onOpenChange={setIsAddDialogOpen}
-        onAdd={handleAddAppointment}
-        appointment={selectedAppointment}
-        onEdit={handleEditAppointment}
-        existingAppointments={appointments}
-      />
+      {isAdmin && (
+        <AddAppointmentDialog
+          open={isAddDialogOpen}
+          onOpenChange={setIsAddDialogOpen}
+          onAdd={handleAddAppointment}
+          appointment={selectedAppointment}
+          onEdit={handleEditAppointment}
+          existingAppointments={appointments}
+        />
+      )}
 
       <DayDetailsDialog
         open={isDayDetailsOpen}
