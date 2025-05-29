@@ -9,23 +9,23 @@ export const PREDEFINED_USERS = [
   },
   {
     id: '550e8400-e29b-41d4-a716-446655440001',
-    full_name: 'Maria Popescu',
-    username: 'maria.popescu',
-    password: 'maria123',
+    full_name: 'Gheorghe Bardan',
+    username: 'gheorghe.bardan',
+    password: 'gheorghe123',
     role: 'trainer' as const
   },
   {
     id: '550e8400-e29b-41d4-a716-446655440002',
-    full_name: 'Ion Ionescu',
-    username: 'ion.ionescu',
-    password: 'ion123',
+    full_name: 'Dumitru Vlad',
+    username: 'dumitru.vlad',
+    password: 'dumitru123',
     role: 'trainer' as const
   },
   {
     id: '550e8400-e29b-41d4-a716-446655440003',
-    full_name: 'Ana Georgescu',
-    username: 'ana.georgescu',
-    password: 'ana123',
+    full_name: 'Mitocaru Constantin',
+    username: 'mitocaru.constantin',
+    password: 'mitocaru123',
     role: 'trainer' as const
   }
 ];
