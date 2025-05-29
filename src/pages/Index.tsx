@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar } from '@/components/ui/calendar';
@@ -140,13 +139,8 @@ const Index = () => {
   };
 
   const handleDayClick = (date: Date) => {
-    // Întotdeauna actualizăm data selectată și deschidem dialogul
     setSelectedDate(date);
-    // Forțăm închiderea și redeschiderea dialogului pentru a permite click-uri repetate
-    setIsDayDetailsOpen(false);
-    setTimeout(() => {
-      setIsDayDetailsOpen(true);
-    }, 50);
+    setIsDayDetailsOpen(true);
   };
 
   const handleLogout = () => {
