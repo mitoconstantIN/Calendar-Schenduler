@@ -67,6 +67,19 @@ export const AppointmentForm = ({
     }
   }, [appointment]);
 
+  const generateTrainerUUID = (trainerName: string): string => {
+    // Creăm un UUID consistent bazat pe numele trainerului
+    // Folosim o metodă simplă de hash pentru a genera același UUID pentru același nume
+    const hash = trainerName.split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a;
+    }, 0);
+    
+    // Convertim hash-ul la un UUID format
+    const hexHash = Math.abs(hash).toString(16).padStart(8, '0');
+    return `${hexHash.slice(0, 8)}-${hexHash.slice(0, 4)}-4${hexHash.slice(1, 4)}-8${hexHash.slice(0, 3)}-${hexHash.slice(0, 12)}`;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -85,8 +98,8 @@ export const AppointmentForm = ({
       return;
     }
 
-    // Generăm un UUID valid pentru trainer_id
-    const trainerId = crypto.randomUUID();
+    // Generăm un UUID consistent pentru trainer_id bazat pe numele trainerului
+    const trainerId = generateTrainerUUID(formData.trainer_name);
     const dateString = format(formData.date, 'yyyy-MM-dd');
 
     const appointmentData = {
