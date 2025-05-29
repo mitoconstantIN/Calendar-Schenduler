@@ -78,17 +78,19 @@ export const AddAppointmentDialog = ({
   }, [appointment]);
 
   const validateTimeOverlap = (trainerName: string, date: string, startTime: string, endTime: string, excludeId?: string) => {
-    const conflictingAppointments = existingAppointments.filter(apt => 
+    // Filtrăm doar programările pentru același trainer în aceeași zi
+    const trainerAppointmentsOnSameDay = existingAppointments.filter(apt => 
       apt.trainer_name === trainerName && 
       apt.date === date &&
-      apt.id !== excludeId
+      apt.id !== excludeId // Excludem programarea curentă dacă este editare
     );
 
-    for (const apt of conflictingAppointments) {
+    // Verificăm suprapunerea doar cu programările aceluiași trainer
+    for (const apt of trainerAppointmentsOnSameDay) {
       const aptStart = apt.start_time;
       const aptEnd = apt.end_time;
       
-      // Check if times overlap - improved logic
+      // Verificăm dacă orele se suprapun
       if (
         (startTime >= aptStart && startTime < aptEnd) ||
         (endTime > aptStart && endTime <= aptEnd) ||
@@ -108,7 +110,7 @@ export const AddAppointmentDialog = ({
     const start = parseInt(startTime.replace(':', ''));
     const end = parseInt(endTime.replace(':', ''));
     
-    // Business hours: 8:00 - 18:00
+    // Ore de lucru: 8:00 - 18:00
     if (start < 800 || end > 1800) {
       return {
         isValid: false,
@@ -122,7 +124,7 @@ export const AddAppointmentDialog = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate required fields
+    // Validare câmpuri obligatorii
     if (!formData.trainer_name || !formData.school_name || !formData.start_time || !formData.end_time) {
       toast({
         title: "Eroare validare",
@@ -132,7 +134,7 @@ export const AddAppointmentDialog = ({
       return;
     }
 
-    // Validate time order
+    // Validare ordine ore
     if (formData.start_time >= formData.end_time) {
       toast({
         title: "Eroare validare",
@@ -142,7 +144,7 @@ export const AddAppointmentDialog = ({
       return;
     }
 
-    // Validate business hours
+    // Validare ore de lucru
     const businessHoursValidation = validateBusinessHours(formData.start_time, formData.end_time);
     if (!businessHoursValidation.isValid) {
       toast({
@@ -155,7 +157,7 @@ export const AddAppointmentDialog = ({
 
     const dateString = format(formData.date, 'yyyy-MM-dd');
     
-    // Validate time overlap
+    // Validare suprapunere ore DOAR pentru același trainer
     const validation = validateTimeOverlap(
       formData.trainer_name, 
       dateString, 
@@ -173,7 +175,7 @@ export const AddAppointmentDialog = ({
       return;
     }
 
-    // Get trainer ID from predefined trainers
+    // Obține ID-ul trainerului din lista predefinită
     const selectedTrainer = PREDEFINED_TRAINERS.find(t => t.full_name === formData.trainer_name);
     const trainerId = selectedTrainer?.id || '00000000-0000-0000-0000-000000000000';
 
@@ -219,7 +221,7 @@ export const AddAppointmentDialog = ({
           <DialogDescription>
             {isEditing 
               ? 'Modifică detaliile programării existente.' 
-              : 'Completează informațiile pentru o programare nouă.'
+              : 'Completează informațiile pentru o programare nouă. Poți adăuga mai multe programări pe aceeași zi, dar nu se pot suprapune orele pentru același trainer.'
             }
           </DialogDescription>
         </DialogHeader>
