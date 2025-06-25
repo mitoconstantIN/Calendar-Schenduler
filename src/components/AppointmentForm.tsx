@@ -186,8 +186,6 @@ export const AppointmentForm = ({
               type="time"
               value={formData.start_time}
               onChange={(e) => setFormData(prev => ({...prev, start_time: e.target.value}))}
-              min="08:00"
-              max="18:00"
               required
             />
           </div>
@@ -198,8 +196,6 @@ export const AppointmentForm = ({
               type="time"
               value={formData.end_time}
               onChange={(e) => setFormData(prev => ({...prev, end_time: e.target.value}))}
-              min="08:00"
-              max="18:00"
               required
             />
           </div>

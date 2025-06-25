@@ -49,17 +49,7 @@ export const validateTimeOverlap = (
 };
 
 export const validateBusinessHours = (startTime: string, endTime: string): BusinessHoursValidation => {
-  const start = parseInt(startTime.replace(':', ''));
-  const end = parseInt(endTime.replace(':', ''));
-  
-  // Ore de lucru: 8:00 - 18:00
-  if (start < 800 || end > 1800) {
-    return {
-      isValid: false,
-      message: "Programările trebuie să fie între 08:00 și 18:00"
-    };
-  }
-  
+  // Nu mai avem restricții de ore de lucru - orice oră este validă
   return { isValid: true };
 };
 
@@ -90,7 +80,7 @@ export const validateAppointmentForm = (
     };
   }
 
-  // Validare ore de lucru
+  // Validare ore de lucru (nu mai verificăm restricțiile)
   const businessHoursValidation = validateBusinessHours(formData.start_time, formData.end_time);
   if (!businessHoursValidation.isValid) {
     return {
