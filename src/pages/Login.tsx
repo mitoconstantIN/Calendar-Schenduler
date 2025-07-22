@@ -9,6 +9,7 @@ import { PREDEFINED_USERS } from '@/data/predefinedUsers';
 import { toast } from '@/hooks/use-toast';
 import { User, Shield, Calendar } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -16,6 +17,8 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
+
+  useDocumentTitle("Calendar Scheduler");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,7 +79,7 @@ const Login = () => {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Introduceți numele de utilizator"
+                  placeholder="admin"
                   className="mt-1"
                   required
                 />
@@ -89,7 +92,7 @@ const Login = () => {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Introduceți parola"
+                  placeholder="admin123"
                   className="mt-1"
                   required
                 />

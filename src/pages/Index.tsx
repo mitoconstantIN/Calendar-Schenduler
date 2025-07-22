@@ -16,6 +16,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { useAppointments, useCreateAppointment, useUpdateAppointment, useDeleteAppointment } from '@/hooks/useAppointments';
 import type { Appointment } from '@/hooks/useAppointments';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 export type ViewMode = 'day' | 'month';
 
@@ -33,7 +34,8 @@ const Index = () => {
   const createAppointmentMutation = useCreateAppointment();
   const updateAppointmentMutation = useUpdateAppointment();
   const deleteAppointmentMutation = useDeleteAppointment();
-
+  useDocumentTitle("Calendar Scheduler");
+  
   // Verificăm autentificarea
   useEffect(() => {
     if (!isAuthenticated) {
